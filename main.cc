@@ -7,6 +7,7 @@
 #include <SDL_image.h>
 #include <stdio.h>
 #include <png.h>
+#include <unistd.h>
 
 double x_0, y_0, w=8, h=4;
 double vx_0 = 0.05, vy_0 = 0;
@@ -31,6 +32,7 @@ bool sides_inter[3][3] =
 };
 
 
+int g_end = 0;
 
 struct ship
 {
@@ -158,6 +160,7 @@ struct rocket:public ship
 struct enemy:public ship
 {
 	int bt;
+	int nbf, nbd;
 	void fire();
 	enemy();
 	void chv();
@@ -169,7 +172,7 @@ struct enemy:public ship
 struct enemy_bomb:public ship
 {
 	enemy_bomb();
-
+	
 };
 
 
@@ -217,6 +220,8 @@ enemy::enemy():ship()
 {
 	bt = rand()%1000;
 	image = enemy_image;
+	nbf = 3;
+	nbd = 7;
 }
 
 
@@ -236,18 +241,18 @@ void enemy::activity()
 
 void enemy::on_die()
 {
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < nbd; i++)
 	{
 		enemy_bomb *newr = new enemy_bomb;
-		newr->vx = 0.05*cos(i*2*3.14159/10);
-		newr->vy = 0.05*sin(i*2*3.14159/10);
+		newr->vx = 0.06*cos(i*2*3.14159/nbd);
+		newr->vy = 0.06*sin(i*2*3.14159/nbd);
 		
 		newr->x = x+newr->vx*2;
 		newr->y = y+newr->vy*2;
 		
 		
 		newr->side=2;
-		newr->alpha=i*180/10;
+		newr->alpha=i*180/nbd;
 		ships.push_back(newr);	
 	}
 }
@@ -255,13 +260,14 @@ void enemy::on_die()
 
 void enemy::fire(void)
 {
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < nbf; i++)
 	{
+		double a = alpha + (i-(nbf-1)/2.0)*40*2/(nbf-1);
 		enemy_bomb *newr = new enemy_bomb;
-		newr->x = x-0.15;
-		newr->y = y+0.15*(i-2);
-		newr->vx = -vx_0 + vx;
-		newr->vy = 0.02*(i-2) + vy;
+		newr->x = x+0.15*cos(a*3.1415926535/180);
+		newr->y = y+0.15*sin(a*3.1415926535/180);
+		newr->vx = 0.01*cos(a*3.1415926535/180)-vx_0;
+		newr->vy = 0.01*sin(a*3.1415926535/180);
 		newr->side=2;
 		newr->alpha=180;
 		ships.push_back(newr);
@@ -288,13 +294,84 @@ Uint32 timer(Uint32 interval, void *param)
 	y_0 += vy_0;
 	pos0 -= vx_0;
 
-	std::list<ship*>::iterator it;
+	std::list<ship*>::iterator it, it2;
 	for (it = ships.begin(); it != ships.end(); ++it)
 	{
 			(*it)->step();	
 			(*it)->activity();
 	}
-	
+
+
+	for (it = ships.begin(); it != ships.end();++it)
+	{
+		/* проверка столкновения со стеной */
+		
+		double y = (*it)->y;
+		double x = (*it)->x-(x_0+pos0);
+		
+		int k = x/(w/3);
+		int j;
+		
+		double y1 = mountain[0][k];
+		double y2 = mountain[0][k+1];
+		double dx = (x-k*w/3.)/(w/3);
+		double ym = y1*(1-dx)+y2*dx;
+		if (y < ym+0.1)
+		{
+			(*it)->mr=0;
+		}
+		y1 = mountain[1][k];
+		y2 = mountain[1][k+1];
+		ym = y1*(1-dx)+y2*dx;
+		if (y > ym-0.1)
+		{
+			(*it)->mr=0;
+		}
+			
+			
+		for (it2 = ships.begin(); it2 != ships.end();++it2)
+		{
+			if (it == it2)
+				continue;
+			
+			if (sides_inter[(*it)->side][(*it2)->side] == false)
+				continue;
+			if ((*it)->intersect(*it2))
+			{
+				(*it)->mr--;
+				if ((*it)->mr == 0)
+				{
+					if ((*it)->side == 1)
+						count++;
+				}
+			}
+		}
+	}
+
+
+
+	for (it = ships.begin(); it != ships.end();)
+	{
+		if ((*it)->x < x_0 || (*it)->x > x_0 + w || (*it)->y < 0 || (*it)->y > h || (*it)->mr <= 0)
+		{
+			if (*it == you)
+			{
+				printf("Game over\n");
+				// проиграли!!
+				g_end = 1;
+			}
+			if ((*it)->mr <= 0)
+				(*it)->on_die();
+			it = ships.erase(it);
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+
+
 	return interval;
 }
 
@@ -441,7 +518,6 @@ void init_wall()
 
 int main(void)
 {
-	int g_end = 0;
 	SDL_Event event;
 
 
@@ -577,79 +653,8 @@ int main(void)
 		}
 
 
-		for (it = ships.begin(); it != ships.end();++it)
-		{
-			/* проверка столкновения со стеной */
-			
-			double y = (*it)->y;
-			double x = (*it)->x-(x_0+pos0);
-			
-			int k = x/(w/3);
-			int j;
-			
-			double y1 = mountain[0][k];
-			double y2 = mountain[0][k+1];
-			double dx = (x-k*w/3.)/(w/3);
-			double ym = y1*(1-dx)+y2*dx;
-			if (y < ym+0.1)
-			{
-				(*it)->mr=0;
-			}
-			y1 = mountain[1][k];
-			y2 = mountain[1][k+1];
-			ym = y1*(1-dx)+y2*dx;
-			if (y > ym-0.1)
-			{
-				(*it)->mr=0;
-			}
-				
-				
-			for (it2 = ships.begin(); it2 != ships.end();++it2)
-			{
-				if (it == it2)
-					continue;
-				
-				if (sides_inter[(*it)->side][(*it2)->side] == false)
-					continue;
-				if ((*it)->intersect(*it2))
-				{
-					(*it)->mr--;
-					if ((*it)->mr == 0)
-					{
-						if ((*it)->side == 1)
-							count++;
-					}
-				}
-
-			}
-		}
-
-
-
-
-
-		for (it = ships.begin(); it != ships.end();)
-		{
-			if ((*it)->x < x_0 || (*it)->x > x_0 + w || (*it)->y < 0 || (*it)->y > h || (*it)->mr <= 0)
-			{
-
-				if (*it == you)
-				{
-					printf("Game over\n");
-					// проиграли!!
-					g_end = 1;
-				}
-				if ((*it)->mr <= 0)
-					(*it)->on_die();
-				it = ships.erase(it);
-			}
-			else
-			{
-				++it;
-			}
-		}
 		
-
+		usleep(1e6/50);
 
 		SDL_Flip(screen);
 	}
