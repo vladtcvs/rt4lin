@@ -1,6 +1,5 @@
 #include <list>
 #include <SDL.h>
-#include "SDL_draw.h"
 #include <math.h>
 #include <time.h>
 #include <SDL_ttf.h>
@@ -16,7 +15,7 @@ double vx_0 = 0.05, vy_0 = 0;
 int WS =800, HS=400;
 
 #define abs(x) ((x)<0?(-(x)):(x))
-
+#define sqr(x) ((x)*(x))
 
 SDL_Surface *char_image;
 SDL_Surface *rocket_image;
@@ -31,6 +30,9 @@ bool sides_inter[3][3] =
 {true, false, false}
 };
 
+
+
+void my_draw_line(SDL_Surface *screen, int x1, int y1, int x2, int y2, Uint32 color);
 
 int g_end = 0;
 
@@ -103,14 +105,14 @@ void ship::draw(SDL_Surface *screen)
 		by = ys-dy;	
 		ex = xs+dx;
 		ey = ys+dy;
-		Draw_Line(screen, bx*WS/w, by*HS/h, ex*WS/w, ey*HS/h, 0xFFFFFF);	
+		my_draw_line(screen, bx*WS/w, by*HS/h, ex*WS/w, ey*HS/h, 0xFFFFFF);	
 		ex = xs+dx*3./4;
 		ey = ys+dy*3./4;
 
 		bx = -dy/4;
 		by = dx/4;
 
-		Draw_Line(screen, (ex+bx)*WS/w, (ey+by)*HS/h, (ex-bx)*WS/w, (ey-by)*HS/h, 0xFFFFFF);	
+		my_draw_line(screen, (ex+bx)*WS/w, (ey+by)*HS/h, (ex-bx)*WS/w, (ey-by)*HS/h, 0xFFFFFF);	
 	}
 	else
 	{
@@ -266,8 +268,8 @@ void enemy::fire(void)
 		enemy_bomb *newr = new enemy_bomb;
 		newr->x = x+0.15*cos(a*3.1415926535/180);
 		newr->y = y+0.15*sin(a*3.1415926535/180);
-		newr->vx = 0.01*cos(a*3.1415926535/180)-vx_0;
-		newr->vy = 0.01*sin(a*3.1415926535/180);
+		newr->vx = 0.01*cos(a*3.1415926535/180)+vx;
+		newr->vy = 0.01*sin(a*3.1415926535/180)+vy;
 		newr->side=2;
 		newr->alpha=180;
 		ships.push_back(newr);
@@ -457,7 +459,8 @@ void my_draw_line(SDL_Surface *screen, int x1, int y1, int x2, int y2, Uint32 co
 {
 	int dx=x2-x1, dy=y2-y1;
 	double t;
-	for (t = 0; t <= 1; t+=0.002)
+	double l = sqrt(sqr(x1-x2)+sqr(y1-y2));
+	for (t = 0; t <= 1; t+=1/l)
 	{
 		int x = x1 + dx*t;
 		int y = y1 + dy*t;
@@ -516,14 +519,29 @@ void init_wall()
 	}
 }
 
+
+TTF_Font *font;
+
+void init_fonts()
+{
+	TTF_Init();
+	font = TTF_OpenFont("./font.ttf",24);
+
+}
+
+void load_images()
+{
+	char_image=load_image("character.png");
+	rocket_image=load_image("rocket.png");
+	enemy_image=load_image("enemy.png");
+	enemy_bomb_image=load_image("enemy_bomb.png");
+}
+
+
 int main(void)
 {
 	SDL_Event event;
 
-
-	TTF_Font *font;
-	TTF_Init();
-	font = TTF_OpenFont("./font.ttf",24);
 	SDL_Surface *imgTxt ;
 	SDL_Rect txtRect ; // Store (x,y) of text for blit
 	SDL_Color fColor ; // Font color (R,G,B)
@@ -538,13 +556,9 @@ int main(void)
 	SDL_WM_SetCaption("RTYPE LINUX", "RTYPE LINUX");
 	SDL_Surface* screen = SDL_SetVideoMode(WS, HS+40, 32, SDL_DOUBLEBUF|SDL_HWSURFACE);
 	
-	char_image=load_image("character.png");
-	rocket_image=load_image("rocket.png");
-	enemy_image=load_image("enemy.png");
-	enemy_bomb_image=load_image("enemy_bomb.png");
-
+	init_fonts();
 	init_wall();
-
+	load_images();
 
 	x_0 = 0;
 	y_0 = 0;
@@ -575,8 +589,7 @@ int main(void)
 			(*it)->draw(screen);	
 		}
 			
-		Draw_Line(screen, 0, HS, WS, HS, 0xFF00FF);
-		
+		my_draw_line(screen, 0, HS, WS, HS, 0xFF00FF00);		
 
 		sprintf(StatusString, "Count: %i   Ammo: %i    Objects: %i    Angry: %i", count, ammo, (int)ships.size(), count%20);
 		imgTxt = TTF_RenderText_Solid(font, StatusString, fColor);
