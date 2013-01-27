@@ -8,290 +8,32 @@
 #include <png.h>
 #include <unistd.h>
 
-double x_0, y_0, w=8, h=4;
-double vx_0 = 0.05, vy_0 = 0;
 
-
-int WS =800, HS=400;
+#include "draw.h"
+#include "data_structures.h"
+#include "init.h"
+#include "ship.h"
 
 #define abs(x) ((x)<0?(-(x)):(x))
 #define sqr(x) ((x)*(x))
 
-SDL_Surface *char_image;
-SDL_Surface *rocket_image;
-SDL_Surface *enemy_image;
-SDL_Surface *enemy_bomb_image;
-
-
-bool sides_inter[3][3] = 
-{
-{false, true, true},
-{true, false, false},
-{true, false, false}
-};
 
 
 
-void my_draw_line(SDL_Surface *screen, int x1, int y1, int x2, int y2, Uint32 color);
+
 
 int g_end = 0;
 
-struct ship
-{
-	SDL_Surface *image;
-	int mr;
-	int side;
-	double x, y;
-	double alpha;
-	double vx, vy;
-	virtual void draw(SDL_Surface *screen);
-	virtual void move(double dx, double dy);
-	void step(void);
-	virtual void chv(void){}
-	virtual void activity(){}
-	virtual void on_die(){}
-	virtual void fire(void){}
-	virtual bool intersect(ship *other);
-	ship();
-};
 
-
-
-std::list<ship*> ships;
-
-int count = 0;
-int ammo = 0;
-
-
-ship::ship()
-{
-	image = NULL;
-	mr = 1;
-}
-
-void ship::step(void)
-{
-	x += vx;
-	y += vy;
-	chv();
-}
-
-void ship::move(double dx, double dy)
-{
-	x += dx;
-	y += dy;
-}
-
-bool ship::intersect(ship *other)
-{
-	double l2 = (x-other->x)*(x-other->x)+(y-other->y)*(y-other->y);
-	return (l2 < 0.03);
-}
-
-
-void ship::draw(SDL_Surface *screen)
-{
-	if (image == NULL)
-	{
-		double xs = x-x_0, ys = y-y_0;
-
-		if (xs < 0 || ys < 0 || xs > w || ys > h)
-			return;
-		double sl = 0.1;
-		double dx, dy, bx, by, ex, ey;
-		dx = sl*cos(alpha*3.1415926/180);
-		dy = sl*sin(alpha*3.1415926/180);
-		bx = xs-dx;
-		by = ys-dy;	
-		ex = xs+dx;
-		ey = ys+dy;
-		my_draw_line(screen, bx*WS/w, by*HS/h, ex*WS/w, ey*HS/h, 0xFFFFFF);	
-		ex = xs+dx*3./4;
-		ey = ys+dy*3./4;
-
-		bx = -dy/4;
-		by = dx/4;
-
-		my_draw_line(screen, (ex+bx)*WS/w, (ey+by)*HS/h, (ex-bx)*WS/w, (ey-by)*HS/h, 0xFFFFFF);	
-	}
-	else
-	{
-		SDL_Rect rect;
-		rect.w=image->w;
-		rect.h=image->h;
-		rect.x=(x-x_0)*WS/w-rect.w/2;
-		rect.y=(y-y_0)*HS/h-rect.h/2;
-
-		SDL_BlitSurface(image,0,screen,&rect);
-	}
-
-
-}
-
-
-struct character:public ship
-{
-	character();
-	void fire(void);
-	void move(double dx, double dy);
-	void chv();
-};
-
-void character::chv()
-{
-	if (x < x_0+0.1)
-		x = x_0+0.1;
-
-	if (x > x_0+w-0.1)
-		x = x_0+w-0.1;
-
-	if (y < 0.1)
-		y = 0.1;
-	if (y > h-0.1)
-		y = h-0.1;
-}
-
-
-struct rocket:public ship
-{
-	void chv(){}
-	rocket();
-};
-
-
-struct enemy:public ship
-{
-	int bt;
-	int nbf, nbd;
-	void fire();
-	enemy();
-	void chv();
-	void activity();
-	void on_die();
-};
-
-
-struct enemy_bomb:public ship
-{
-	enemy_bomb();
-	
-};
-
-
-character *you;
-
-
-character::character():ship()
-{
-	image=char_image;
-}
-
-void character::move(double dx, double dy)
-{
-	ship::move(dx, dy);
-	chv();
-}
-
-
-
-void character::fire(void)
-{
-	rocket *newr = new rocket;
-	newr->x = x+0.15;
-	newr->y = y;
-	newr->vx = 2*vx_0+vx;
-	newr->vy = vy;
-	newr->side=0;
-	newr->alpha=0;
-	ships.push_back(newr);
-	ammo++;
-}
-
-
-
-
-
-rocket::rocket():ship()
-{
-	image = rocket_image;
-}
-
-
-
-enemy::enemy():ship()
-{
-	bt = rand()%1000;
-	image = enemy_image;
-	nbf = 3;
-	nbd = 7;
-}
-
-
-
-
-void enemy::chv()
-{
-	vy = sin(time(NULL)+bt)*0.01;
-	
-}
-
-void enemy::activity()
-{
-	if (rand()%(40-count%20) == 0)
-		fire();
-}
-
-void enemy::on_die()
-{
-	for (int i = 0; i < nbd; i++)
-	{
-		enemy_bomb *newr = new enemy_bomb;
-		newr->vx = 0.06*cos(i*2*3.14159/nbd);
-		newr->vy = 0.06*sin(i*2*3.14159/nbd);
-		
-		newr->x = x+newr->vx*2;
-		newr->y = y+newr->vy*2;
-		
-		
-		newr->side=2;
-		newr->alpha=i*180/nbd;
-		ships.push_back(newr);	
-	}
-}
-
-
-void enemy::fire(void)
-{
-	for (int i = 0; i < nbf; i++)
-	{
-		double a = alpha + (i-(nbf-1)/2.0)*40*2/(nbf-1);
-		enemy_bomb *newr = new enemy_bomb;
-		newr->x = x+0.15*cos(a*3.1415926535/180);
-		newr->y = y+0.15*sin(a*3.1415926535/180);
-		newr->vx = 0.01*cos(a*3.1415926535/180)+vx;
-		newr->vy = 0.01*sin(a*3.1415926535/180)+vy;
-		newr->side=2;
-		newr->alpha=180;
-		ships.push_back(newr);
-	}
-}
-
-enemy_bomb::enemy_bomb():ship()
-{
-	image = enemy_bomb_image;
-}
-
-
-
-
-
-double mountain[2][10];
-double pos0;
+extern int ammo;
 
 
 
 Uint32 timer(Uint32 interval, void *param)
 {
+	if (mode != 0)
+		return interval;
+
 	x_0 += vx_0;
 	y_0 += vy_0;
 	pos0 -= vx_0;
@@ -379,16 +121,19 @@ Uint32 timer(Uint32 interval, void *param)
 
 Uint32 add_en(Uint32 interval, void *param)
 {
-	double y = (rand()%100)*h/100.;
-	ship *en = new enemy;
-	en->x = x_0+w-0.2;
-	en->y = y;
-	en->vx = -0.02;
-	en->mr=1;
-	en->vy = 0;
-	en->alpha=180;
-	en->side = 1;
-	ships.push_back(en);
+	if (mode == 0)
+	{
+		double y = (rand()%100)*h/100.;
+		ship *en = new enemy;
+		en->x = x_0+w-0.2;
+		en->y = y;
+		en->vx = -0.02;
+		en->mr=1;
+		en->vy = 0;
+		en->alpha=180;
+		en->side = 1;
+		ships.push_back(en);
+	}
 	return interval;
 }
 
@@ -397,100 +142,8 @@ Uint32 add_en(Uint32 interval, void *param)
 bool left, right, up, down;
 
 
-SDL_Surface *load_image(const char *filename)
-{	
-
-	png_byte **row_pointers;
-	char header[8];
-	SDL_Surface *image = NULL;
-	FILE *f = fopen(filename, "rb");
-	fread(header, 1, 8, f);
 
 
-	png_struct *png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-	png_info *info_ptr = png_create_info_struct(png_ptr);
-
-	setjmp(png_jmpbuf(png_ptr));
-	png_init_io(png_ptr, f);
-	png_set_sig_bytes(png_ptr, 8);
-	png_read_info(png_ptr, info_ptr);
-	
-	int width = png_get_image_width(png_ptr, info_ptr);
-        int height = png_get_image_height(png_ptr, info_ptr);
-        png_byte color_type = png_get_color_type(png_ptr, info_ptr);
-        png_byte bit_depth = png_get_bit_depth(png_ptr, info_ptr);
-
-	int number_of_passes = png_set_interlace_handling(png_ptr);
-        png_read_update_info(png_ptr, info_ptr);
-
-	setjmp(png_jmpbuf(png_ptr));
-	row_pointers = (png_bytep*) malloc(sizeof(png_bytep) * height);
-
-	int y, x;
-	for (y=0; y<height; y++)
-		row_pointers[y] = (png_byte*) malloc(png_get_rowbytes(png_ptr,info_ptr));
-
-	png_read_image(png_ptr, row_pointers);
-	fclose(f);
-	
-	image = SDL_CreateRGBSurface(SDL_HWSURFACE, width, height, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
-	SDL_LockSurface(image);
-	for (y = 0; y < height; y++)
-	{
-		for (x = 0; x < width; x++)
-		{
-			((Uint32*)image->pixels)[y*image->w+x] = row_pointers[y][4*x+0]<<24 | 
-					row_pointers[y][4*x+1]<<16 | 
-					row_pointers[y][4*x+2]<<8 | 
-					row_pointers[y][4*x+3];
-			
-		}
-		free(row_pointers[y]);
-	}
-	free(row_pointers);
-	SDL_UnlockSurface(image);
-	
-	
-	return image;
-}
-
-
-void my_draw_line(SDL_Surface *screen, int x1, int y1, int x2, int y2, Uint32 color)
-{
-	int dx=x2-x1, dy=y2-y1;
-	double t;
-	double l = sqrt(sqr(x1-x2)+sqr(y1-y2));
-	for (t = 0; t <= 1; t+=1/l)
-	{
-		int x = x1 + dx*t;
-		int y = y1 + dy*t;
-		if (x < 0 || y < 0 || x >= WS || y >= HS)
-			continue;
-		((Uint32*)(screen->pixels))[y*screen->w+x] = color;
-	}
-
-}
-
-void draw_walls(SDL_Surface *screen)
-{
-	int i;
-	int j;
-	for (j = 0; j < 2; j++)
-	for (i = 0; i <= 3; i++)
-	{
-		int x1, y1, x2, y2;
-		double x_1, x_2;
-		x_1 = i*w/3 + pos0;
-		x_2 = (i+1)*w/3 + pos0;
-		
-		x1 = x_1*WS/w;
-		x2 = x_2*WS/w;
-		y1 = (mountain[j][i]-y_0)*HS/h;
-		y2 = (mountain[j][i+1]-y_0)*HS/h;
-		my_draw_line(screen, x1, y1, x2, y2, 0x0000FF00);
-		
-	}
-}
 
 
 void wall_new()
@@ -510,33 +163,149 @@ void wall_new()
 }
 
 
-void init_wall()
+
+void normal_mode(SDL_Surface *screen, SDL_Event event)
 {
-	for (int i = 0; i <= 4; i++)
+	std::list<ship*>::iterator it, it2;
+	for (it = ships.begin(); it != ships.end(); ++it)
 	{
-		mountain[0][i] = (rand()%(HS/4))*h/HS;
-		mountain[1][i] = (rand()%(HS/4))*h/HS+h*3/4.;
+		(*it)->draw(screen);	
 	}
+			
+	
+	draw_walls(screen);
+	wall_new();
+	if (SDL_PollEvent(&event)) 
+	{
+		switch (event.type) 
+	      	{
+		      	case SDL_QUIT:
+				g_end = 1;
+			      	break;
+		      	case SDL_KEYDOWN:
+		      		switch(event.key.keysym.sym)
+		      		{
+					case SDLK_ESCAPE:
+						mode = 1-mode;
+						break;
+		      			case SDLK_LEFT:
+						left = true;
+						you->vx = vx_0-0.025;
+				        	break;
+					case SDLK_RIGHT:
+						right = true;
+						you->vx = vx_0+0.05;
+						break;
+		      			case SDLK_UP:
+						up = true;
+						you->vy = vy_0-0.05;
+				        	break;
+					case SDLK_DOWN:
+						down = true;
+						you->vy = vy_0+0.05;
+						break;
+					default:
+						break;
+				}
+				break;
+			case SDL_KEYUP:
+				switch(event.key.keysym.sym)
+		      		{
+
+		      			case SDLK_LEFT:
+						left = false;
+						if (right == false)
+						you->vx = vx_0;
+				        	break;
+					case SDLK_RIGHT:
+						right = false;
+						if (left == false)
+							you->vx = vx_0;
+						break;
+		      			case SDLK_UP:
+						up = false;
+						if (down == false)
+							you->vy = vy_0;
+				        	break;
+					case SDLK_DOWN:
+						down = false;
+						if (up == false)
+							you->vy = vy_0;
+						break;
+					case SDLK_LCTRL:
+						you->fire();
+						break;
+					default:
+						break;
+				}
+				break;
+			default:
+				break;
+		}
+	}
+
 }
 
 
-TTF_Font *font;
 
-void init_fonts()
+
+void menu_mode(SDL_Surface *screen, SDL_Event event)
 {
-	TTF_Init();
-	font = TTF_OpenFont("./font.ttf",24);
-
+	static int menu_item = 0;
+	if (SDL_PollEvent(&event)) 
+	{
+		switch (event.type) 
+	      	{
+		      	case SDL_QUIT:
+				g_end = 1;
+			      	break;
+		      	case SDL_KEYDOWN:
+		      		switch(event.key.keysym.sym)
+		      		{
+		      			case SDLK_UP:
+						if (menu_item > 0)				
+							--menu_item;
+				        	break;
+					case SDLK_DOWN:
+						if (menu_item < cur_menu->submenu.size()-1)
+							++menu_item;
+						break;
+					case SDLK_RETURN:
+						if (cur_menu->submenu[menu_item]->action == NULL)
+						{
+							if (menu_item < cur_menu->submenu.size())
+								cur_menu = cur_menu->submenu[menu_item];
+						}
+						else 
+						{
+							int (*f)(void*) = cur_menu->submenu[menu_item]->action;
+							f(NULL);
+						}
+						break;
+					case SDLK_PAGEUP:
+						if (cur_menu->parent != NULL)
+							cur_menu = cur_menu->parent;
+						break;
+					case SDLK_ESCAPE:
+						mode = 1-mode;
+						break;
+					default:
+						break;
+				}
+				break;
+			default:
+				break;
+		}
+	}
+	cur_menu->draw(screen, menu_item);
 }
 
-void load_images()
+
+int end_game(void*)
 {
-	char_image=load_image("character.png");
-	rocket_image=load_image("rocket.png");
-	enemy_image=load_image("enemy.png");
-	enemy_bomb_image=load_image("enemy_bomb.png");
+	g_end = 1;
+	return 0;
 }
-
 
 int main(void)
 {
@@ -558,7 +327,9 @@ int main(void)
 	
 	init_fonts();
 	init_wall();
+	init_inter();
 	load_images();
+	init_menus();
 
 	x_0 = 0;
 	y_0 = 0;
@@ -573,100 +344,31 @@ int main(void)
 	you->vx = vx_0;
 	you->vy = vy_0;
 	
+	mode = 1;
+
 	SDL_TimerID enemy_timer_id = SDL_AddTimer(2000, add_en, NULL);
 	SDL_TimerID my_timer_id = SDL_AddTimer(50, timer, NULL);
 
-
+	
 	while (!g_end)
 	{	
 		int ns = ships.size();
 		int i;
 		char StatusString[1000]={0};
-		std::list<ship*>::iterator it, it2;
 		SDL_FillRect(screen, NULL, 0x000000);
-		for (it = ships.begin(); it != ships.end(); ++it)
-		{
-			(*it)->draw(screen);	
-		}
-			
-		my_draw_line(screen, 0, HS, WS, HS, 0xFF00FF00);		
 
-		sprintf(StatusString, "Count: %i   Ammo: %i    Objects: %i    Angry: %i", count, ammo, (int)ships.size(), count%20);
+
+		my_draw_line(screen, 0, HS-1, WS, HS-1, 0x00FF00FF);		
+
+		sprintf(StatusString, "Count: %i   Ammo: %i    Objects: %i    Angry: %i   %s", count, 
+						ammo, (int)ships.size(), count%20, g_mode?"modern":"classic");
 		imgTxt = TTF_RenderText_Solid(font, StatusString, fColor);
 		SDL_BlitSurface(imgTxt, NULL, screen, &txtRect );
-		
-		draw_walls(screen);
-
-		wall_new();
-
-		if (SDL_PollEvent(&event)) 
-		{
-			switch (event.type) 
-		      	{
-			      	case SDL_QUIT:
-					g_end = 1;
-				      	break;
-			      	case SDL_KEYDOWN:
-			      		switch(event.key.keysym.sym)
-			      		{
-			      			case SDLK_LEFT:
-							left = true;
-							you->vx = vx_0-0.025;
-					        	break;
-						case SDLK_RIGHT:
-							right = true;
-							you->vx = vx_0+0.05;
-							break;
-			      			case SDLK_UP:
-							up = true;
-							you->vy = vy_0-0.05;
-					        	break;
-						case SDLK_DOWN:
-							down = true;
-							you->vy = vy_0+0.05;
-							break;
-						default:
-							break;
-					}
-					break;
-				case SDL_KEYUP:
-					switch(event.key.keysym.sym)
-			      		{
-			      			case SDLK_LEFT:
-							left = false;
-							if (right == false)
-								you->vx = vx_0;
-					        	break;
-						case SDLK_RIGHT:
-							right = false;
-							if (left == false)
-								you->vx = vx_0;
-							break;
-			      			case SDLK_UP:
-							up = false;
-							if (down == false)
-								you->vy = vy_0;
-					        	break;
-						case SDLK_DOWN:
-							down = false;
-							if (up == false)
-								you->vy = vy_0;
-							break;
-						case SDLK_LCTRL:
-							you->fire();
-							break;
-						default:
-							break;
-					}
-
-
-
-					break;
-			}
-		}
-
-
-		
+	
+		if (mode)
+			menu_mode(screen, event);
+		else
+			normal_mode(screen, event);
 		usleep(1e6/50);
 
 		SDL_Flip(screen);
@@ -674,6 +376,7 @@ int main(void)
 	SDL_RemoveTimer(my_timer_id);
 	SDL_RemoveTimer(enemy_timer_id);
 	ships.clear();
+	free_menus();
 	printf("Count: %i\n", count);
 	SDL_Quit();
 	return 0;
