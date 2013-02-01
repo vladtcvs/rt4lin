@@ -90,6 +90,7 @@ void load_images()
 	rocket_image=load_image("rocket.png");
 	enemy_image=load_image("enemy.png");
 	enemy_bomb_image=load_image("enemy_bomb.png");
+	life_bonus_image=load_image("life_bonus.png");
 
 	int i;
 	for (i = 0; i < ntrees; i++)

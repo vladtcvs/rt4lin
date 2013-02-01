@@ -16,6 +16,7 @@ struct menu
 };
 
 
+int ch_value(void*pn);
 int ch_mode(void*);
 
 

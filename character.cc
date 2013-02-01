@@ -10,6 +10,7 @@ character::character():ship()
 	side = O_CHAR;
 	image=char_image;
 	fire_vel = 0.1;
+	mr = 3;
 }
 
 void character::move(double dx, double dy)
@@ -39,12 +40,12 @@ void character::fire(void)
 	rocket *newr = new rocket;
 	newr->x = x+0.15;
 	newr->y = y;
-	if (g_mode == 1)
+	if (horiz == 0)
 	{
 		newr->vx = fire_vel+vx;
 		newr->vy = vy;
 	}
-	else if (g_mode == 0)
+	else 
 	{
 		newr->vx = fire_vel+vx_0;
 		newr->vy = 0;

@@ -55,9 +55,19 @@ menu::menu()
 }
 
 
-
 int ch_mode(void*)
 {
-	g_mode = 1-g_mode;
+	lsp = 0;
+	eexpl = 0;
+	horiz = 1;
 	return 0;
 }
+
+int ch_value(void* pn)
+{
+	int *p = (int*)pn;
+	*p = 1-*p;
+	return 0;
+}
+
+

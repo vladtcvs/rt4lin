@@ -78,11 +78,9 @@ Uint32 timer(Uint32 interval, void *param)
 			if (it == it2)
 				continue;
 			
-			if (sides_inter[(*it)->side][(*it2)->side] == false)
-				continue;
 			if ((*it)->intersect(*it2))
 			{
-				(*it)->mr--;
+				(*it)->mr+=sides_inter[(*it)->side][(*it2)->side];
 				if ((*it)->mr == 0)
 				{
 					if ((*it)->side == 1)
@@ -119,11 +117,35 @@ Uint32 timer(Uint32 interval, void *param)
 	return interval;
 }
 
+double y_rand()
+{
+	double x = w-0.2-pos0;
+	int k1, k2;
+	k1 = x/(w/3);
+	k2 = k1+1;
+	double x1 = k1*w/3;
+	double x2 = k2*w/3;
+	double y1_1 = mountain[0][k1];
+	double y2_1 = mountain[0][k2];
+
+	double y1_2 = mountain[1][k1];
+	double y2_2 = mountain[1][k2];
+	
+	double dx = (x-x1)/(w/3);
+	double yh = y1_1*dx + y1_2*(1-dx);
+	double yl = y2_1*dx + y2_2*(1-dx);
+
+	int p = 20+rand()%60;
+	double y = yl + p/99.*(yh-yl);
+	return y;
+}
+
+
 Uint32 add_en(Uint32 interval, void *param)
 {
 	if (mode == 0)
 	{
-		double y = (rand()%100)*h/100.;
+		double y = y_rand();
 		ship *en = new enemy;
 		en->x = x_0+w-0.2;
 		en->y = y;
@@ -131,8 +153,20 @@ Uint32 add_en(Uint32 interval, void *param)
 		en->mr=1;
 		en->vy = 0;
 		en->alpha=180;
-		en->side = 1;
+		en->side = O_ENEM;
 		ships.push_back(en);
+
+
+		if (rand()%40 == 0)
+		{
+			y = y_rand();
+			ship *lb = new life_bonus;
+			lb->x = x_0+w-0.2;
+			lb->y = y;
+			lb->alpha=180;
+			lb->side = O_LBONUS;
+			ships.push_back(lb);
+		}
 	}
 	return interval;
 }
@@ -186,11 +220,15 @@ void normal_mode(SDL_Surface *screen, SDL_Event event)
 		      		switch(event.key.keysym.sym)
 		      		{
 					case SDLK_ESCAPE:
-						mode = 1-mode;
+						cur_menu = &root_menu;
+						mode = 1;
 						break;
 		      			case SDLK_LEFT:
 						left = true;
-						you->vx = vx_0-0.025;
+						if (lsp)
+							you->vx = vx_0-0.025;
+						else 
+							you->vx = vx_0-0.05;
 				        	break;
 					case SDLK_RIGHT:
 						right = true;
@@ -279,7 +317,7 @@ void menu_mode(SDL_Surface *screen, SDL_Event event)
 						else 
 						{
 							int (*f)(void*) = cur_menu->submenu[menu_item]->action;
-							f(NULL);
+							f(cur_menu->submenu[menu_item]->value);
 						}
 						break;
 					case SDLK_PAGEUP:
@@ -287,7 +325,7 @@ void menu_mode(SDL_Surface *screen, SDL_Event event)
 							cur_menu = cur_menu->parent;
 						break;
 					case SDLK_ESCAPE:
-						mode = 1-mode;
+						mode = 0;
 						break;
 					default:
 						break;
@@ -306,6 +344,11 @@ int end_game(void*)
 	g_end = 1;
 	return 0;
 }
+
+
+
+
+
 
 int main(void)
 {
@@ -360,8 +403,10 @@ int main(void)
 
 		my_draw_line(screen, 0, HS-1, WS, HS-1, 0x00FF00FF);		
 
-		sprintf(StatusString, "Count: %i   Ammo: %i    Objects: %i    Angry: %i   %s", count, 
-						ammo, (int)ships.size(), count%20, g_mode?"modern":"classic");
+		sprintf(StatusString, "Count: %i   Ammo: %i    Objects: %i    Angry: %i    Lifes: %i", count, 
+						ammo, (int)ships.size(), count%20, you->mr);
+
+
 		imgTxt = TTF_RenderText_Solid(font, StatusString, fColor);
 		SDL_BlitSurface(imgTxt, NULL, screen, &txtRect );
 	

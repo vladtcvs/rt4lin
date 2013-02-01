@@ -30,6 +30,8 @@ void enemy::activity()
 
 void enemy::on_die()
 {
+	if (eexpl == 0)
+		return;
 	for (int i = 0; i < nbd; i++)
 	{
 		enemy_bomb *newr = new enemy_bomb;

@@ -2,14 +2,19 @@
 #include <SDL_ttf.h>
 
 #define SET_INTER(a,b,v) {sides_inter[a][b] = v; sides_inter[b][a] = v;}
+#define SET_INTER_A(a,b,v) {sides_inter[a][b] = v;}
 
 void init_inter()
 {
-	SET_INTER(O_CHAR, O_ENEM, true)
-	SET_INTER(O_CHAR, O_BOMB, true)
-	SET_INTER(O_CHAR, O_WALL, true)
-	SET_INTER(O_ENEM, O_WALL, true)
-	SET_INTER(O_BOMB, O_WALL, true)
+	SET_INTER(O_CHAR, O_ENEM, -1)
+	SET_INTER(O_YBOMB, O_ENEM, -1)
+	SET_INTER(O_CHAR, O_BOMB, -1)
+	SET_INTER(O_CHAR, O_WALL, -1)
+	SET_INTER(O_ENEM, O_WALL, -1)
+	SET_INTER(O_BOMB, O_WALL, -1)
+	SET_INTER(O_BOMB, O_YBOMB, -1)
+	SET_INTER_A(O_LBONUS, O_CHAR, -1)
+	SET_INTER_A(O_CHAR, O_LBONUS, 1)
 }
 
 
@@ -42,8 +47,8 @@ void init_menus()
 
 	chmode = new menu;
 	chmode->action = ch_mode;
-	chmode->value = &g_mode;
-	strcpy(chmode->name, "Classic/modern");
+	chmode->value = NULL;
+	strcpy(chmode->name, "Set classic");
 	chmode->parent = &root_menu;
 	root_menu.submenu.push_back(chmode);
 
@@ -53,6 +58,38 @@ void init_menus()
 	strcpy(chmode->name, "Quit");
 	chmode->parent = &root_menu;
 	root_menu.submenu.push_back(chmode);
+
+	chmode = new menu;
+	chmode->action = NULL;
+	chmode->value = NULL;
+	strcpy(chmode->name, "Options");
+	chmode->parent = &root_menu;
+	root_menu.submenu.push_back(chmode);
+
+	menu *options = chmode;
+	
+	chmode = new menu;
+	chmode->action = ch_value;
+	chmode->value = &horiz;
+	strcpy(chmode->name, "Fire horizontally");
+	chmode->parent = options;
+	options->submenu.push_back(chmode);
+	
+	chmode = new menu;
+	chmode->action = ch_value;
+	chmode->value = &eexpl;
+	strcpy(chmode->name, "Firing of enemy ships");
+	chmode->parent = options;
+	options->submenu.push_back(chmode);
+
+	chmode = new menu;
+	chmode->action = ch_value;
+	chmode->value = &lsp;
+	strcpy(chmode->name, "Low back speed");
+	chmode->parent = options;
+	options->submenu.push_back(chmode);
+
+
 
 	cur_menu = &root_menu;
 }

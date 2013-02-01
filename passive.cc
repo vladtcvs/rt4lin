@@ -15,7 +15,7 @@ enemy_bomb::enemy_bomb():ship()
 rocket::rocket():ship()
 {
 	image = rocket_image;
-	side = O_CHAR;
+	side = O_YBOMB;
 }
 
 

@@ -63,6 +63,14 @@ struct enemy_bomb:public ship
 	
 };
 
+struct life_bonus:public ship
+{
+	int bt;
+	life_bonus();
+	void chv();
+	void activity();
+};
+
 
 
 

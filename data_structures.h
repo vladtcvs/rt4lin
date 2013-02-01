@@ -12,10 +12,11 @@ extern SDL_Surface *char_image;
 extern SDL_Surface *rocket_image;
 extern SDL_Surface *enemy_image;
 extern SDL_Surface *enemy_bomb_image;
+extern SDL_Surface *life_bonus_image;
 extern SDL_Surface *trees[10];
 extern int ntrees;
 
-extern bool sides_inter[10][10];
+extern int sides_inter[10][10];
 
 extern character *you;
 extern std::list<ship*> ships;
@@ -36,12 +37,15 @@ extern menu *cur_menu;
 extern int count;
 extern TTF_Font *font;
 
-extern int mode, g_mode;
+extern int mode;
+extern int eexpl, horiz, lsp;
 
 #define O_CHAR 0
 #define O_ENEM 1
 #define O_BOMB 2
 #define O_WALL 3
+#define O_YBOMB 4
+#define O_LBONUS 5
 
 
 

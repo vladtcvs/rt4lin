@@ -7,10 +7,11 @@ SDL_Surface *char_image;
 SDL_Surface *rocket_image;
 SDL_Surface *enemy_image;
 SDL_Surface *enemy_bomb_image;
+SDL_Surface *life_bonus_image;
 SDL_Surface *trees[10];
 int ntrees;
 
-bool sides_inter[10][10];
+int sides_inter[10][10];
 
 character *you;
 std::list<ship*> ships;
@@ -35,5 +36,7 @@ TTF_Font *font;
 menu root_menu;
 menu *cur_menu;
 
+
+int eexpl=0, horiz=0, lsp=0;
 
 int mode = 0, g_mode = 0;
