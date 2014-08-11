@@ -17,14 +17,35 @@ void init_inter()
 	SET_INTER_A(O_CHAR, O_LBONUS, 1)
 }
 
+double drandom()
+{
+	return ((double)rand())/(RAND_MAX-1);
+}
+void wall_new()
+{
+	double kw = 0.48;
+	if (pos0 < -w/3)
+	{
+		int i;
+		for (i = 0; i <= 3; i++)
+		{
+			mountain[0][i]=mountain[0][i+1];
+			mountain[1][i]=mountain[1][i+1];
+		}
+		mountain[0][4] = drandom()*kw*h;
+		mountain[1][4] = h-drandom()*kw*h;
+		pos0 = 0;
+	}
+}
+
 
 
 void init_wall()
 {
-	for (int i = 0; i <= 4; i++)
+	for (int i = 0; i <= 10; i++)
 	{
-		mountain[0][i] = (rand()%(HS/4))*h/HS;
-		mountain[1][i] = (rand()%(HS/4))*h/HS+h*3/4.;
+		pos0 = -w;
+		wall_new();
 	}
 }
 

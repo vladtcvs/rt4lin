@@ -18,21 +18,6 @@
 #define sqr(x) ((x)*(x))
 
 
-void wall_new()
-{
-	if (pos0 < -w/3)
-	{
-		int i;
-		for (i = 0; i <= 3; i++)
-		{
-			mountain[0][i]=mountain[0][i+1];
-			mountain[1][i]=mountain[1][i+1];
-		}
-		mountain[0][4] = (rand()%(HS/4))*h/HS;
-		mountain[1][4] = (rand()%(HS/4))*h/HS+h*3/4.;
-		pos0 = 0;
-	}
-}
 
 
 
