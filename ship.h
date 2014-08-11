@@ -27,6 +27,7 @@ struct ship
 
 struct character:public ship
 {
+	double vy1;
 	double fire_vel;
 	character();
 	void fire(void);

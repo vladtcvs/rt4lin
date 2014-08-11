@@ -224,11 +224,11 @@ void normal_mode(SDL_Event event)
 					break;
 				case SDLK_UP:
 					up = true;
-					you->vy = vy_0-0.05;
+					you->vy = vy_0-you->vy1;
 					break;
 				case SDLK_DOWN:
 					down = true;
-					you->vy = vy_0+0.05;
+					you->vy = vy_0+you->vy1;
 					break;
 				case SDLK_LSHIFT:
 					you->fire();

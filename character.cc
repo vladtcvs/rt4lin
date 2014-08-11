@@ -11,6 +11,7 @@ character::character():ship()
 	image=char_image;
 	fire_vel = 0.1;
 	mr = 3;
+	vy1 = 0.05;
 }
 
 void character::move(double dx, double dy)
@@ -32,6 +33,17 @@ void character::chv()
 		y = 0.1;
 	if (y > h-0.1)
 		y = h-0.1;
+
+	if (autom)
+	{
+		double ym = wall_here(x, 1);	
+		y = ym-0.1;
+		vy1 = 0.08;
+	}
+	else
+	{
+		vy1 = 0.05;
+	}
 
 }
 

@@ -95,14 +95,33 @@ void init_menus()
 	chmode->parent = options;
 	options->submenu.push_back(chmode);
 
+	chmode = new menu;
+	chmode->action = ch_value;
+	chmode->value = &autom;
+	strcpy(chmode->name, "Automobile mode");
+	chmode->parent = options;
+	options->submenu.push_back(chmode);
+
 
 
 	cur_menu = &root_menu;
 }
 
 
+void free_menu(menu *m)
+{
+	std::vector<menu*>::iterator it;
+	for (it = m->submenu.begin(); it != m->submenu.end(); ++it)
+	{
+		menu *mm = *it;
+		free_menu(mm);
+		delete mm;
+	}
+	m->submenu.clear();
+}
+
 void free_menus()
 {
-	
+	free_menu(&root_menu);
 }
 

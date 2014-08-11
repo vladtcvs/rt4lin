@@ -39,7 +39,7 @@ extern int count;
 extern TTF_Font *font;
 
 extern int mode;
-extern int eexpl, horiz, lsp;
+extern int eexpl, horiz, lsp, autom;
 
 #define O_CHAR 0
 #define O_ENEM 1

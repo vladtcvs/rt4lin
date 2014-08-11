@@ -42,6 +42,6 @@ menu root_menu;
 menu *cur_menu;
 
 
-int eexpl=0, horiz=0, lsp=0;
+int eexpl=0, horiz=0, lsp=0, autom = 0;
 
 int mode = 0, g_mode = 0;
