@@ -28,6 +28,13 @@ int g_end = 0;
 extern int ammo;
 
 
+void print_status(char *str, SDL_Color fColor)
+{
+	clear_block(0,HS,WS,40);
+	draw_line(0,HS+1,WS,HS+1, 0xFFFF0000);
+	draw_text(str, fColor, font, 5,HS+5);	
+}
+
 void draw_scene()
 {
 	clear_block(0,0,WS,HS);
@@ -41,14 +48,10 @@ void draw_scene()
 	SDL_Color fColor ; // Font color (R,G,B)
 	fColor.r = fColor.g = fColor.b = 245;
 
-	clear_block(0,HS,WS,40);
-	draw_line(0,HS+1,WS,HS+1, 0xFFFF0000);
 	sprintf(StatusString, "Mode: %i Count: %i Lifes: %i", mode, count, you->mr);
-	draw_text(StatusString, fColor, font, 5,HS+5);	
-
+	print_status(StatusString, fColor);
 	draw_walls();
 
-	SDL_RenderPresent(renderer);
 }
 
 Uint32 draw_t(Uint32 interval, void *param)
@@ -312,6 +315,9 @@ void menu_mode(SDL_Event event)
 	}
 	clear_block(0,0,WS,HS);
 	cur_menu->draw(menu_item);
+	SDL_Color fc;
+	fc.r = fc.g = fc.b = 200;
+	print_status("Esc to play", fc);
 }
 
 
