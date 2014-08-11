@@ -2,13 +2,19 @@
 #define DRAW_OBJECT_H
 
 #include <SDL.h>
-#include "ship.h"
+#include <SDL_ttf.h>
 
-void draw_object(SDL_Surface *screen, SDL_Surface *image, double x, double y);
-SDL_Surface *load_image(const char *filename);
+typedef SDL_Texture Texture;
+
+void draw_object(Texture *image, double x, double y);
+void draw_text(char *str, SDL_Color fcolor, TTF_Font *font, int x, int y);
+void clear_block(int x, int y, int bw, int bh);
+
+Texture *load_image(const char *filename);
+
 void load_images();
-void draw_walls(SDL_Surface *screen);
-void my_draw_line(SDL_Surface *screen, int x1, int y1, int x2, int y2, Uint32 color);
+void draw_walls();
+void draw_line(int x1, int y1, int x2, int y2, Uint32 color);
 
 
 #endif

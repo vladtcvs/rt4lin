@@ -10,7 +10,7 @@ struct menu
 	int *value;
 	menu *parent;
 	std::vector<menu*> submenu;
-	void draw(SDL_Surface *screen, int menu_item);
+	void draw(int menu_item);
 	int (*action)(void *);
 	menu();
 };

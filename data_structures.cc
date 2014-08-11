@@ -3,13 +3,18 @@
 #include "data_structures.h"
 
 
-SDL_Surface *char_image;
-SDL_Surface *rocket_image;
-SDL_Surface *enemy_image;
-SDL_Surface *enemy_bomb_image;
-SDL_Surface *life_bonus_image;
-SDL_Surface *trees[10];
+SDL_Texture *char_image;
+SDL_Texture *rocket_image;
+SDL_Texture *enemy_image;
+SDL_Texture *enemy_bomb_image;
+SDL_Texture *life_bonus_image;
+SDL_Texture *trees[10];
+
+
 int ntrees;
+
+
+SDL_Renderer *renderer;
 
 int sides_inter[10][10];
 

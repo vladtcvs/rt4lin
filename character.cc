@@ -42,7 +42,7 @@ void character::fire(void)
 	newr->y = y;
 	if (horiz == 0)
 	{
-		newr->vx = fire_vel+vx;
+		newr->vx = fire_vel+vx_0;
 		newr->vy = vy;
 	}
 	else 

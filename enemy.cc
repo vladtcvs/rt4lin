@@ -8,7 +8,7 @@ enemy::enemy():ship()
 	side = O_ENEM;
 	bt = rand()%1000;
 	image = enemy_image;
-	nbf = 3;
+	nbf = 2;
 	nbd = 7;
 	fire_vel = 0.06;
 }

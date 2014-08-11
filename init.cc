@@ -1,6 +1,6 @@
 #include "data_structures.h"
 #include <SDL_ttf.h>
-
+#include <stdlib.h>
 #define SET_INTER(a,b,v) {sides_inter[a][b] = v; sides_inter[b][a] = v;}
 #define SET_INTER_A(a,b,v) {sides_inter[a][b] = v;}
 
@@ -32,7 +32,11 @@ void init_fonts()
 {
 	TTF_Init();
 	font = TTF_OpenFont("./font.ttf",20);
-
+	if (font == NULL)
+	{
+		printf("Loading font failed!\n");
+		exit(0);
+	}
 }
 
 
@@ -78,7 +82,7 @@ void init_menus()
 	chmode = new menu;
 	chmode->action = ch_value;
 	chmode->value = &eexpl;
-	strcpy(chmode->name, "Firing of enemy ships");
+	strcpy(chmode->name, "Explosion of enemy ships");
 	chmode->parent = options;
 	options->submenu.push_back(chmode);
 
@@ -99,3 +103,4 @@ void free_menus()
 {
 	
 }
+

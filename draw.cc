@@ -10,25 +10,51 @@ extern double x_0, y_0;
 extern double w, h;
 extern int HS, WS;
 
-void draw_object(SDL_Surface *screen, SDL_Surface *image, double x, double y)
+void draw_object(SDL_Texture *image, double x, double y)
 {
 	SDL_Rect rect;
-	rect.w=image->w;
-	rect.h=image->h;
+	int pw, ph;
+	SDL_QueryTexture(image, NULL, NULL, &pw, &ph);
+	rect.w=pw;
+	rect.h=ph;
 	rect.x=(x-x_0)*WS/w-rect.w/2;
 	rect.y=(y-y_0)*HS/h-rect.h/2;
 
-	SDL_BlitSurface(image,0,screen,&rect);	
+	SDL_RenderCopy(renderer,image, NULL, &rect);	
 }
 
 
+void draw_text(char *str, SDL_Color fcolor, TTF_Font *font, int x, int y)
+{
+	SDL_Rect rect;
+	rect.x = x;
+	rect.y = y;
 
-SDL_Surface *load_image(const char *filename)
+	SDL_Surface *text = TTF_RenderText_Blended(font, str, fcolor);
+	rect.w = text->w;
+	rect.h = text->h;		
+	SDL_Texture *txt = SDL_CreateTextureFromSurface(renderer, text);
+	SDL_FreeSurface(text);
+	SDL_RenderCopy(renderer, txt, NULL, &rect);
+}
+
+
+void clear_block(int x, int y, int bw, int bh)
+{
+	SDL_Rect rect;
+	rect.x = x;
+	rect.y = y;
+	rect.w = bw;
+	rect.h = bh;
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+	SDL_RenderFillRect(renderer, &rect);
+}
+
+SDL_Texture *load_image(const char *filename)
 {	
 
 	png_byte **row_pointers;
 	char header[8];
-	SDL_Surface *image = NULL;
 	FILE *f = fopen(filename, "rb");
 	fread(header, 1, 8, f);
 
@@ -59,27 +85,36 @@ SDL_Surface *load_image(const char *filename)
 	png_read_image(png_ptr, row_pointers);
 	fclose(f);
 	
-	image = SDL_CreateRGBSurface(SDL_HWSURFACE, width, height, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
-	SDL_LockSurface(image);
+
+
+	Uint32 *pixels;
+
+	int pitch = 0;
+	
+	SDL_Texture *image = NULL;
+	image = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, width, height);
+	SDL_LockTexture(image, NULL, (void**)&pixels, &pitch);
+	
 	for (y = 0; y < height; y++)
 	{
 		for (x = 0; x < width; x++)
 		{
-			((Uint32*)image->pixels)[y*image->w+x] = row_pointers[y][4*x+0]<<24 | 
+			Uint32 px;
+			px = row_pointers[y][4*x+0]<<24 | 
 					row_pointers[y][4*x+1]<<16 | 
 					row_pointers[y][4*x+2]<<8 | 
 					row_pointers[y][4*x+3];
+			pixels[y*width+x] = px;
 			
 		}
 		free(row_pointers[y]);
 	}
-	free(row_pointers);
-	SDL_UnlockSurface(image);
+	SDL_UnlockTexture(image);
 	
+	free(row_pointers);
 	
 	return image;
 }
-
 
 
 
@@ -102,23 +137,13 @@ void load_images()
 }
 
 
-void my_draw_line(SDL_Surface *screen, int x1, int y1, int x2, int y2, Uint32 color)
+void draw_line(int x1, int y1, int x2, int y2, Uint32 color)
 {
-	int dx=x2-x1, dy=y2-y1;
-	double t;
-	double l = sqrt(sqr(x1-x2)+sqr(y1-y2));
-	for (t = 0; t <= 1; t+=1/l)
-	{
-		int x = x1 + dx*t;
-		int y = y1 + dy*t;
-		if (x < 0 || y < 0 || x >= WS || y >= HS)
-			continue;
-		((Uint32*)(screen->pixels))[y*screen->w+x] = color;
-	}
-
+	 SDL_SetRenderDrawColor(renderer, (color>>24)&0xFF, (color>>16)&0xFF, (color>>8)&0xFF, color&0xFF);
+	 SDL_RenderDrawLine(renderer,x1,y1,x2,y2);
 }
 
-void draw_walls(SDL_Surface *screen)
+void draw_walls()
 {
 	int i;
 	int j;
@@ -134,7 +159,7 @@ void draw_walls(SDL_Surface *screen)
 		x2 = x_2*WS/w;
 		y1 = (mountain[j][i]-y_0)*HS/h;
 		y2 = (mountain[j][i+1]-y_0)*HS/h;
-		my_draw_line(screen, x1, y1, x2, y2, 0x0000FF00);
+		draw_line(x1, y1, x2, y2, 0x0000FF00);
 		
 	}
 }

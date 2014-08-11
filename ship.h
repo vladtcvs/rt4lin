@@ -2,16 +2,18 @@
 #define SHIP_H
 
 #include <SDL.h>
+#include "draw.h"
+
 
 struct ship
 {
-	SDL_Surface *image;
+	Texture *image;
 	int mr;
 	int side;
 	double x, y;
 	double alpha;
 	double vx, vy;
-	virtual void draw(SDL_Surface *screen);
+	virtual void draw();
 	virtual void move(double dx, double dy);
 	void step(void);
 	virtual void chv(void){}

@@ -8,14 +8,15 @@
 #include "menu.h"
 #include <SDL_ttf.h>
 
-extern SDL_Surface *char_image;
-extern SDL_Surface *rocket_image;
-extern SDL_Surface *enemy_image;
-extern SDL_Surface *enemy_bomb_image;
-extern SDL_Surface *life_bonus_image;
-extern SDL_Surface *trees[10];
+extern SDL_Texture *char_image;
+extern SDL_Texture *rocket_image;
+extern SDL_Texture *enemy_image;
+extern SDL_Texture *enemy_bomb_image;
+extern SDL_Texture *life_bonus_image;
+extern SDL_Texture *trees[10];
 extern int ntrees;
 
+extern SDL_Renderer *renderer;
 extern int sides_inter[10][10];
 
 extern character *you;
