@@ -216,11 +216,11 @@ void normal_mode(SDL_Event event)
 					if (lsp)
 						you->vx = vx_0-0.025;
 					else 
-						you->vx = vx_0-0.05;
+						you->vx = vx_0-0.07;
 					break;
 				case SDLK_RIGHT:
 					right = true;
-					you->vx = vx_0+0.05;
+					you->vx = vx_0+0.07;
 					break;
 				case SDLK_UP:
 					up = true;
