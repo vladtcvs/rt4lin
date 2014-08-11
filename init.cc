@@ -4,6 +4,8 @@
 #define SET_INTER(a,b,v) {sides_inter[a][b] = v; sides_inter[b][a] = v;}
 #define SET_INTER_A(a,b,v) {sides_inter[a][b] = v;}
 
+#include "wall.h"
+
 void init_inter()
 {
 	SET_INTER(O_CHAR, O_ENEM, -1)
@@ -15,27 +17,6 @@ void init_inter()
 	SET_INTER(O_BOMB, O_YBOMB, -1)
 	SET_INTER_A(O_LBONUS, O_CHAR, -1)
 	SET_INTER_A(O_CHAR, O_LBONUS, 1)
-}
-
-double drandom()
-{
-	return ((double)rand())/(RAND_MAX-1);
-}
-void wall_new()
-{
-	double kw = 0.48;
-	if (pos0 < -w/3)
-	{
-		int i;
-		for (i = 0; i <= 3; i++)
-		{
-			mountain[0][i]=mountain[0][i+1];
-			mountain[1][i]=mountain[1][i+1];
-		}
-		mountain[0][4] = drandom()*kw*h;
-		mountain[1][4] = h-drandom()*kw*h;
-		pos0 = 0;
-	}
 }
 
 

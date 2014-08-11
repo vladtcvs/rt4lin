@@ -1,6 +1,6 @@
 #include "ship.h"
 #include "data_structures.h"
-
+#include "wall.h"
 
 int ammo = 0;
 
@@ -32,6 +32,7 @@ void character::chv()
 		y = 0.1;
 	if (y > h-0.1)
 		y = h-0.1;
+
 }
 
 

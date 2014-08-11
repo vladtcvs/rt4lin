@@ -1,5 +1,5 @@
-OF=character.o  data_structures.o  draw.o  enemy.o  init.o  life_bonus.o  main.o  menu.o  passive.o  ship.o
-HF=data_structures.h  draw.h  init.h  menu.h  ship.h
+OF=character.o  data_structures.o  draw.o  enemy.o  init.o  life_bonus.o  main.o  menu.o  passive.o  ship.o wall.o
+HF=data_structures.h  draw.h  init.h  menu.h  ship.h wall.h
 
 INC=/usr/include/SDL2/
 LD=-lpng -lSDL2 -lSDL2_ttf
@@ -13,6 +13,10 @@ all: rt4lin
 
 main.o: main.cc $(HF)
 	$(CXX) -c main.cc
+
+
+wall.o: wall.cc $(HF)
+	$(CXX) -c wall.cc
 
 ship.o: ship.cc $(HF)
 	$(CXX) -c ship.cc

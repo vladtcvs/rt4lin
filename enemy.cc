@@ -3,6 +3,8 @@
 #include <math.h>
 #include <time.h>
 
+#include "wall.h"
+
 enemy::enemy():ship()
 {
 	side = O_ENEM;
@@ -19,7 +21,7 @@ enemy::enemy():ship()
 void enemy::chv()
 {
 	vy = sin(time(NULL)+bt)*0.01;
-	
+
 }
 
 void enemy::activity()

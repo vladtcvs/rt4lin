@@ -13,6 +13,7 @@
 #include "data_structures.h"
 #include "init.h"
 #include "ship.h"
+#include "wall.h"
 
 #define abs(x) ((x)<0?(-(x)):(x))
 #define sqr(x) ((x)*(x))
@@ -41,7 +42,7 @@ void draw_scene()
 	fColor.r = fColor.g = fColor.b = 245;
 
 	clear_block(0,HS,WS,40);
-	draw_line(0,HS+1,WS,HS, 0xFFFF0000);
+	draw_line(0,HS+1,WS,HS+1, 0xFFFF0000);
 	sprintf(StatusString, "Mode: %i Count: %i Lifes: %i", mode, count, you->mr);
 	draw_text(StatusString, fColor, font, 5,HS+5);	
 
@@ -69,6 +70,9 @@ Uint32 draw_t(Uint32 interval, void *param)
 	return interval;
 }
 
+
+
+
 Uint32 timer(Uint32 interval, void *param)
 {
 
@@ -91,27 +95,12 @@ Uint32 timer(Uint32 interval, void *param)
 		/* проверка столкновения со стеной */
 		
 		double y = (*it)->y;
-		double x = (*it)->x-(x_0+pos0);
+		double x = (*it)->x;
 		
-		int k = x/(w/3);
-		int j;
-		
-		double y1 = mountain[0][k];
-		double y2 = mountain[0][k+1];
-		double dx = (x-k*w/3.)/(w/3);
-		double ym = y1*(1-dx)+y2*dx;
-		if (y < ym+0.1)
+		if (wall_intersect(x, y, 0) || wall_intersect(x, y, 1))
 		{
 			(*it)->mr=0;
 		}
-		y1 = mountain[1][k];
-		y2 = mountain[1][k+1];
-		ym = y1*(1-dx)+y2*dx;
-		if (y > ym-0.1)
-		{
-			(*it)->mr=0;
-		}
-			
 			
 		for (it2 = ships.begin(); it2 != ships.end();++it2)
 		{
@@ -159,24 +148,12 @@ Uint32 timer(Uint32 interval, void *param)
 
 double y_rand()
 {
-	double x = w-0.2-pos0;
-	int k1, k2;
-	k1 = x/(w/3);
-	k2 = k1+1;
-	double x1 = k1*w/3;
-	double x2 = k2*w/3;
-	double y1_1 = mountain[0][k1];
-	double y2_1 = mountain[0][k2];
+	double x = x_0 + w-0.2;
+	double y1 = wall_here(x, 0)+0.1;
+	double y2 = wall_here(x, 1)-0.1;
+	double k = drandom()*(y2-y1);	
 
-	double y1_2 = mountain[1][k1];
-	double y2_2 = mountain[1][k2];
-	
-	double dx = (x-x1)/(w/3);
-	double yh = y1_1*dx + y1_2*(1-dx);
-	double yl = y2_1*dx + y2_2*(1-dx);
-
-	int p = 20+rand()%60;
-	double y = yl + p/99.*(yh-yl);
+	double y = y1 + k;
 	return y;
 }
 
@@ -200,7 +177,7 @@ Uint32 add_en(Uint32 interval, void *param)
 		y = y_rand();
 		ship *lb = new life_bonus;
 		lb->x = x_0+w-0.2;
-		lb->y = y;
+		lb->y = y_rand();
 		lb->alpha=180;
 		lb->side = O_LBONUS;
 		ships.push_back(lb);
